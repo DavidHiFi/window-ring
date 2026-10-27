@@ -479,6 +479,15 @@ bool GetDrawFrame(HWND target, RECT* frame) {
         cloaked) {
         return false;
     }
+    // Near-invisible layered windows are helpers, not something you look at
+    // (RHI parks a 2% opacity drag-and-drop target over its logo).
+    BYTE alpha = 255;
+    DWORD layeredFlags = 0;
+    if ((GetWindowLongPtrW(target, GWL_EXSTYLE) & WS_EX_LAYERED) &&
+        GetLayeredWindowAttributes(target, nullptr, &alpha, &layeredFlags) &&
+        (layeredFlags & LWA_ALPHA) && alpha < 64) {
+        return false;
+    }
     if (FAILED(DwmGetWindowAttribute(target, DWMWA_EXTENDED_FRAME_BOUNDS, frame,
                                      sizeof(*frame)))) {
         return false;
